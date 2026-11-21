@@ -71,7 +71,8 @@ Status: **Fixed**, **Open**, or **Ignored (harmless)**.
 - **Lesson:** The IDE's project root and the build root can differ in a monorepo. The terminal worked the whole time, so the build was fine; only the IDE setup was wrong.
 
 ## TS-010: `.env` not found when running from IntelliJ
-- **Date:** 2026-11-15 | **Status:** Fix identified (apply the change below)
+- **Date:** 2026-11-15 | **Status:** Fixed and verified
+- **Verified:** After the change, the app started from the repo root (`started ... in .../4mulashift`), connected to Postgres and Flyway ran (`Successfully validated 2 migrations`, schema at version 2).
 - **Symptom:** `FATAL: password authentication failed for user "${POSTGRES_USER}"` (the user name was the literal text, not a value).
 - **Cause:** `application.properties` imported `optional:file:../../.env[.properties]`, which works when the app starts in `services/backend`. IntelliJ started it in the repo root (startup log: `started ... in .../4mulashift`), so the relative path pointed outside the repo. `optional:` made Spring ignore the missing file silently, so the placeholder stayed unresolved.
 - **Fix:** Import both locations:
