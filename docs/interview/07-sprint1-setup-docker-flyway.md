@@ -188,7 +188,7 @@ Entry template:
 
 **Proof:** (add after running) log line `Successfully applied 1 migration ... now at version v3`, and `\dt` showing `leads` and `lead_allocations`.
 
-### Day 7 (2026-11-22): Flyway V4 (bookings, payments) — pending until V4 is applied
+**Proof:** `flyway_schema_history` shows versions 1 to 4 with success `t`. `\d bookings` shows `uq_bookings_active_vehicle_slot` (partial unique index on `(vehicle_id, slot_date)` where status is `PENDING_PAYMENT` or `CONFIRMED`) and `fk_bookings_vehicle_vendor`. `\d payments` shows `uq_payments_one_success_per_booking`.
 
 **30-second explanation:** "I wrote the fourth migration for bookings and payments, and moved the booking rules into the database. A partial unique index allows only one active booking, pending payment or confirmed, per vehicle and day, which closes a gap I found while writing the API. A composite foreign key guarantees that a booking's vehicle belongs to the booking's vendor, and a unique index allows at most one successful payment per booking."
 
@@ -213,4 +213,30 @@ Entry template:
 **Self-check:** 1) Why does the index include `PENDING_PAYMENT`? 2) Why is `lead_id` not simply unique on `bookings`?
 
 **Proof:** (add after running) the log line `now at version v4`, and `\d bookings` showing `uq_bookings_active_vehicle_slot`.
+
+### Day 8 (2026-11-22): Flyway V5 (audit_logs) — pending until V5 is applied
+
+**30-second explanation:** "I created the audit log as an append-only table. Every allocation, booking and payment decision can be written to it, and database triggers reject any update, delete or truncate, so history cannot be rewritten by application code. It has no foreign keys on purpose, so it is never blocked by changes to business rows, and it stores details as JSON so the shape can evolve."
+
+**What I did:**
+
+- Created `audit_logs` with entity type and id, action, actor, correlation id, JSON details and a timestamp.
+- Added a CHECK so a user action must name the user and a system action must not.
+- Added triggers that raise an error on UPDATE, DELETE and TRUNCATE.
+- Added indexes for lookups by entity, by time and by actor.
+
+**Why (decision):**
+
+- Immutability is enforced in the database, because application code can have bugs and other writers can bypass it.
+- JSONB for details, so different event types can record different fields without schema changes.
+- A correlation id links an audit row to the request logs for debugging.
+- Audit history stays in PostgreSQL for the MVP and can move to a document store or a partitioned table later.
+
+**Problems encountered:** none yet.
+
+**Sample interview question:** Q: How do you make an audit log tamper-resistant? A: Insert-only access in the application, triggers that reject UPDATE, DELETE and TRUNCATE, and in production a database role that has only INSERT and SELECT on the table. A table owner could still drop the triggers, so the role restriction matters for real protection.
+
+**Self-check:** 1) Why does the audit table have no foreign keys? 2) What does the actor CHECK constraint guarantee? 3) Why is the proof test run as one transaction?
+
+**Proof:** (add after running) the log line `now at version v5`, `\d audit_logs`, the append-only error message, and `count(*)` equal to 0.
 

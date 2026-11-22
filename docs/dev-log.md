@@ -114,3 +114,23 @@ Every entry starts with its date (`## YYYY-MM-DD: title`), the day the work actu
 - Add a revision note to `er-diagram.md` (see the revision block below).
 - Switch the runtime JDK to 21 (TS-011).
 - Create the JPA entities for the verified tables.
+
+## 2026-11-22 (update): Flyway V4 applied, V5 prepared
+
+**Done**
+- Flyway V4 (`bookings`, `payments`) applied and verified: `flyway_schema_history` lists versions 1 to 4, all `success = t`.
+- `\d bookings` confirms the planned rules: partial unique index on `(vehicle_id, slot_date)` over `PENDING_PAYMENT` and `CONFIRMED` (TS-005 fix), partial unique index for one active booking per lead, composite foreign key from `(vehicle_id, vendor_id)` to `vehicles`, and CHECK constraints for status, amount, payment deadline and status timestamps.
+- `\d payments` confirms unique `gateway_order_id` and `gateway_payment_id`, unique `(booking_id, idempotency_key)`, and a partial unique index allowing one `SUCCESS` payment per booking.
+- Flyway V5 (`audit_logs`) written: append-only table with triggers that reject UPDATE, DELETE and TRUNCATE. Syntax checked with the PostgreSQL parser; not yet applied.
+
+**Blocked**
+- None.
+
+**Learned**
+- A composite foreign key can enforce a cross-table rule (a vehicle belongs to the booking's vendor) without application code, but the referenced pair must have its own unique constraint.
+- Partial unique indexes express "at most one active row" rules, such as one active booking per vehicle and day.
+
+**Next**
+- Apply and verify V5, including the append-only test.
+- Create the JPA entities for the verified tables.
+- Switch the runtime JDK to 21 (TS-011).
