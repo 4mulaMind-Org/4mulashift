@@ -86,3 +86,29 @@ Every step produces: the work, a dev-log entry, an interview note entry, and a t
 ## How to resume in a new chat
 
 Paste this file and say which step you are on. The assistant has no memory between chats.
+
+## Status updates
+
+Baseline above is as of 2026-11-15. Each update below lists only what changed. Where an update differs from the baseline, the newest update wins.
+
+### 2026-11-22
+
+**Progress**
+- Sprint 1 Day 6 (Flyway V3: `leads`, `lead_allocations`): done and verified (schema version 3).
+- Sprint 1 Day 7 (Flyway V4: `bookings`, `payments`): file ready, not yet applied.
+- ER diagram revision added to `er-diagram.md`.
+
+**Decisions**
+- At most one active booking per lead and one active booking per vehicle and day (partial unique indexes over `PENDING_PAYMENT` and `CONFIRMED`).
+- A booking's vehicle must belong to the booking's vendor (composite foreign key).
+- Idempotency keys are scoped to the caller (per customer on leads, per vendor on bookings, per booking on payments).
+
+**Open items**
+- Closed: TS-005 (booking index design), the `er-diagram.md` update.
+- Opened and closed since the baseline: TS-013, TS-014 (see `troubleshooting-log.md`).
+- Still open: TS-011 (switch the runtime JDK to 21), placeholder `max_kg` values, PRD section 11 questions and launch city, GitHub Projects board, design-phase dates in the dev log.
+
+**Next**
+- Apply and verify V4, write V5 (`audit_logs`), then the JPA entities.
+
+> Baseline as of 2026-11-15. See "Status updates" at the bottom for later changes.

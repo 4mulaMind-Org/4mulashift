@@ -1,6 +1,48 @@
 # Dev Log
 
-A short record of what I did, what blocked me and what I learned. Newest entry first. Details of each problem are in `docs/troubleshooting-log.md` (TS-xxx ids).
+A short record of what I did, what blocked me and what I learned. Oldest entry first; add each new day at the bottom. Details of each problem are in `docs/troubleshooting-log.md` (TS-xxx ids).
+
+## Working agreement
+
+Every step produces three things: the work itself, a dev-log entry, and an interview note. Any problem goes into `troubleshooting-log.md`.
+
+Every entry starts with its date (`## YYYY-MM-DD: title`), the day the work actually happened. Several days in one entry are written as a range.
+
+---
+
+## 2026-11-07 to 2026-11-10 (approx.): Design phase
+
+**Done**
+- Repo created inside the organization, folders `docs/`, `services/`, `postman/`, `.gitignore`, README.
+- PRD v0.1, user stories (16), ER diagram (9 tables), HLD, API spec, three ADRs.
+- Interview notes 00 to 06.
+- While writing the API spec I found a gap in my own ER design: the partial unique index must cover `PENDING_PAYMENT` as well as `CONFIRMED` bookings (TS-005).
+
+**Blocked**
+- `git push` from the terminal timed out (TS-001).
+- Extra character in the cloned folder name (TS-002).
+- Pasted README text into the terminal by mistake (TS-003).
+- File staged at the wrong path, then moved (TS-004).
+
+**Learned**
+- Terminal Git and the IDE can use different network paths.
+- Reviewing my own design against the next document (API after ER) catches real gaps.
+- Keep scope small: one verifiable MVP.
+
+---
+
+## 2026-11-11: Spring Boot project created
+
+**Done**
+- Chose Spring Boot 4.1.2 (latest stable; 3.x is out of free support), Java 21 target, Maven, Jar.
+- Group and package `com.mulashift`. Dependencies: Web, JPA, PostgreSQL, Flyway, Validation, Lombok, Actuator, Redis. Spring Security deliberately left out until the auth step.
+- Placed the project at `services/backend`, build succeeded.
+
+**Blocked**
+- `com.4mulashift` is not a valid Java package name (TS-006).
+
+**Learned**
+- Pre-release versions (RC, SNAPSHOT) are avoided; library versions are left to Spring Boot's dependency management.
 
 ---
 
@@ -34,42 +76,41 @@ A short record of what I did, what blocked me and what I learned. Newest entry f
 
 ---
 
-## 2026-11-11: Spring Boot project created
+## 2026-11-21: Resuming Sprint 1, Docker was not running
 
 **Done**
-- Chose Spring Boot 4.1.2 (latest stable; 3.x is out of free support), Java 21 target, Maven, Jar.
-- Group and package `com.mulashift`. Dependencies: Web, JPA, PostgreSQL, Flyway, Validation, Lombok, Actuator, Redis. Spring Security deliberately left out until the auth step.
-- Placed the project at `services/backend`, build succeeded.
+- Reopened the project after a break. The `.env` fix from TS-010 held: the app read the user and password correctly.
 
 **Blocked**
-- `com.4mulashift` is not a valid Java package name (TS-006).
+- `Connection to localhost:5432 refused`: the Postgres container was not running because Docker Desktop was closed (TS-013).
 
 **Learned**
-- Pre-release versions (RC, SNAPSHOT) are avoided; library versions are left to Spring Boot's dependency management.
+- "Connection refused" (service down) and "password authentication failed" (wrong credentials) are different problems. Read the error class first.
+- Containers do not restart on their own without a `restart` policy.
+- Named volumes keep the database data across container restarts.
 
----
+**Next**
+- Start Docker, confirm both containers are healthy, run the app so Flyway V3 (`leads`, `lead_allocations`) is applied, and verify with `\dt`.
+- Write V4 (`bookings`, `payments`) with the corrected partial unique index (TS-005).
+- Switch the runtime JDK to 21 (TS-011).
 
-## 2026-11-07 to 2026-11-10 (approx.): Design phase
+## 2026-11-22: Flyway V3 applied, V4 prepared
 
 **Done**
-- Repo created inside the organization, folders `docs/`, `services/`, `postman/`, `.gitignore`, README.
-- PRD v0.1, user stories (16), ER diagram (9 tables), HLD, API spec, three ADRs.
-- Interview notes 00 to 06.
-- While writing the API spec I found a gap in my own ER design: the partial unique index must cover `PENDING_PAYMENT` as well as `CONFIRMED` bookings (TS-005).
+- Flyway V3 (`leads`, `lead_allocations`) applied and verified: `flyway_schema_history` lists versions 1, 2 and 3 with `success = t`, and `\dt` shows 8 tables.
+- `\d lead_allocations` confirms the planned rules: unique `(lead_id, vendor_id)`, unique `(lead_id, rank_position)`, a partial unique index allowing one `ACCEPTED` allocation per lead, a partial index on `expires_at` for `OFFERED` rows, and CHECK constraints on status, rank and expiry.
+- Postgres and Redis containers are running again (TS-013 resolved).
+- Flyway V4 (`bookings`, `payments`) written, including the corrected double-booking index from TS-005. SQL syntax checked with the PostgreSQL parser; not yet applied.
 
 **Blocked**
-- `git push` from the terminal timed out (TS-001).
-- Extra character in the cloned folder name (TS-002).
-- Pasted README text into the terminal by mistake (TS-003).
-- File staged at the wrong path, then moved (TS-004).
+- None today. The earlier blockers (TS-013, TS-014) are resolved.
 
 **Learned**
-- Terminal Git and the IDE can use different network paths.
-- Reviewing my own design against the next document (API after ER) catches real gaps.
-- Keep scope small: one verifiable MVP.
+- Check the exact file before applying a migration: the file on disk (3,579 bytes) differed in size from the delivered V3 (2,818 bytes). The resulting schema matched the design, but an applied migration cannot be edited, so compare size or checksum first.
+- Read the error class first: "connection refused" meant the database was down, not that the credentials were wrong.
 
----
-
-## Working agreement
-
-Every step produces three things: the work itself, a dev-log entry, and an interview note. Any problem goes into `troubleshooting-log.md`.
+**Next**
+- Apply and verify V4, then write V5 (`audit_logs`).
+- Add a revision note to `er-diagram.md` (see the revision block below).
+- Switch the runtime JDK to 21 (TS-011).
+- Create the JPA entities for the verified tables.

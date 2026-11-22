@@ -170,3 +170,13 @@ The second transaction waits on the row lock, then sees the active booking and i
 | `V3__create_leads_allocations.sql` | `leads`, `lead_allocations` |
 | `V4__create_bookings_payments.sql` | `bookings`, `payments`, partial unique index |
 | `V5__create_audit_logs.sql` | `audit_logs` |
+
+## Revision 2026-11-22
+
+Changes made while writing migrations V3 and V4. Where the migrations differ from the diagram above, the migrations are the source of truth.
+
+- `leads.idempotency_key` is unique per customer, `(customer_id, idempotency_key)`, not globally.
+- `lead_allocations` has a unique `(lead_id, rank_position)`, a partial unique index allowing one `ACCEPTED` allocation per lead, a partial index on `expires_at` for `OFFERED` rows, and a check that `expires_at > offered_at`.
+- `bookings`: the partial unique index on `(vehicle_id, slot_date)` applies to status `PENDING_PAYMENT` and `CONFIRMED` (TS-005). A second partial unique index allows at most one active booking per lead, replacing the plain unique `lead_id`. `idempotency_key` is unique per `(vendor_id, idempotency_key)`. The vehicle must belong to the booking's vendor (composite foreign key). New columns: `payment_due_by`, `cancelled_at`.
+- `payments`: `idempotency_key` is unique per `(booking_id, idempotency_key)`; at most one `SUCCESS` payment per booking; `gateway_order_id` is unique and `gateway_payment_id` is unique when set; new columns `currency` and `paid_at`.
+- `vehicles` gains a unique `(id, vendor_id)` constraint, which the composite foreign key uses.

@@ -4,6 +4,13 @@ Every real problem hit during the project: symptom, cause, fix, lesson. This is 
 
 Status: **Fixed**, **Open**, or **Ignored (harmless)**.
 
+
+## How to add an entry
+
+1. Copy the format of any entry below (symptom, cause, fix, lesson).
+2. Give it the next TS number, add the date (`YYYY-MM-DD`) in the first line, and put it at the bottom of this file.
+3. Reference it from `dev-log.md` and, if it makes a good story, from the interview notes.
+
 ---
 
 ## TS-001: `git push` from the terminal timed out
@@ -94,10 +101,24 @@ Status: **Fixed**, **Open**, or **Ignored (harmless)**.
 - Reclazz hot-reload plugin `WARN` lines: IDE plugin messages, not application errors.
 - **Lesson:** Not every warning needs action, but check each one once and write down why it is safe.
 
+## TS-013: Connection to localhost:5432 refused (Postgres container not running)
+- **Date:** 2026-11-21 | **Status:** Fix identified (confirm after restarting the containers)
+- **Symptom:** `Unable to obtain connection from database: Connection to localhost:5432 refused ... postmaster is accepting TCP/IP connections` (SQL State 08001, `java.net.ConnectException: Connection refused`).
+- **Cause:** Docker Desktop was not running, so the Postgres container was down. The compose file has no `restart` policy, so containers do not start by themselves when Docker Desktop opens.
+- **How I told it apart from TS-010:** The user name in the error was no longer the literal `${POSTGRES_USER}`, so `.env` was loaded correctly. "Connection refused" means the server could not be reached; "password authentication failed" would mean the server was reached but rejected the login.
+- **Fix:** Start Docker Desktop, run `docker compose up -d` from the repo root, confirm both containers are `(healthy)` with `docker compose ps`, then rerun the app. Data is kept in named volumes, so nothing is lost unless `docker compose down -v` is used.
+- **Optional prevention:** add `restart: unless-stopped` to the `postgres` and `redis` services and enable "Start Docker Desktop when you sign in".
+- **Lesson:** Read the error class first. Connection refused means the service is down or the port is wrong; authentication failed means the service is up and the credentials are wrong. Check `docker compose ps` before debugging the app.
+
 ---
 
-## How to add an entry
 
-1. Copy the format above (symptom, cause, fix, lesson).
-2. Give it the next TS number.
-3. Reference it from `dev-log.md` and, if it makes a good story, from the interview notes.
+## TS-014: `docker compose` said "no configuration file provided" again, wrong directory
+- **Date:** 2026-11-21 | **Status:** Fixed
+- **Symptom:** Same message as TS-007, but the terminal prompt showed `~` (home folder).
+- **Cause:** The command was run outside the repo. Compose looks for `docker-compose.yml` in the current directory only.
+- **Fix:** `cd ~/Desktop/workSpace/project/4mulashift`, then run `docker compose ps` or `docker compose up -d`. Alternative from anywhere: `docker compose -f ~/Desktop/workSpace/project/4mulashift/docker-compose.yml ps`.
+- **Lesson:** The same error message can have different causes (TS-007 was a trailing space in the file name, TS-014 is the wrong directory). Check `pwd` first, then `ls -la`. The IDE terminal opens in the project folder, so it avoids this.
+
+- **Date:** 2026-11-21 | **Status:** Fixed and verified (2026-11-22)
+- **Verified:** Docker containers restarted; the application started, connected to Postgres and Flyway applied V3 (`flyway_schema_history` shows versions 1 to 3, all `success = t`).
