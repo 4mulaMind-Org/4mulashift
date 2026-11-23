@@ -121,3 +121,11 @@ Status: **Fixed**, **Open**, or **Ignored (harmless)**.
 - **Cause:** The command was run outside the repo. Compose looks for `docker-compose.yml` in the current directory only.
 - **Fix:** `cd ~/Desktop/workSpace/project/4mulashift`, then run `docker compose ps` or `docker compose up -d`. Alternative from anywhere: `docker compose -f ~/Desktop/workSpace/project/4mulashift/docker-compose.yml ps`.
 - **Lesson:** The same error message can have different causes (TS-007 was a trailing space in the file name, TS-014 is the wrong directory). Check `pwd` first, then `ls -la`. The IDE terminal opens in the project folder, so it avoids this.
+
+## TS-011 update (2026-11-23): resolved
+
+- **Status:** Fixed and verified (2026-11-23)
+- **Fix:** Java 21 was already installed (Microsoft OpenJDK 21.0.13) but was not the default. In IntelliJ, the project SDK was set to 21 (File, Project Structure, Project) and the JDK of the `BackendApplication` Run configuration was set to 21.
+- **Verified:** Startup log shows `Starting BackendApplication using Java 21.0.13.0.2` and `OpenJDK 64-Bit Server VM 21.0.13.0.2`.
+- **Remaining note:** The terminal default JDK on this machine is still 27, so Maven commands run from the terminal use it unless `JAVA_HOME` is set. The build targets release 21, so this does not break anything. To align it: `export JAVA_HOME=$(/usr/libexec/java_home -v 21)` (add it to `~/.zshrc` to make it permanent).
+- **Lesson:** Check the JDK at the place where the application actually runs, not only in the build file. Three settings control it: project SDK, Run configuration, terminal.

@@ -112,3 +112,18 @@ Baseline above is as of 2026-11-15. Each update below lists only what changed. W
 - Apply and verify V4, write V5 (`audit_logs`), then the JPA entities.
 
 > Baseline as of 2026-11-15. See "Status updates" at the bottom for later changes.
+
+### 2026-11-23
+
+**Progress**
+- Runtime JDK switched to Java 21 and verified from the startup log. All five Flyway migrations validate on the new JDK.
+
+**Decisions**
+- No new decisions.
+
+**Open items**
+- Closed: TS-011.
+- Still open: placeholder `max_kg` values, PRD section 11 questions and launch city, GitHub Projects board, design-phase dates in the dev log.
+
+**Next**
+- First Java code: the `City` entity and repository, verified by a test against the real database.

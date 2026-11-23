@@ -238,3 +238,26 @@ Entry template:
 **Self-check:** 1) Why does the audit table have no foreign keys? 2) What does the actor CHECK constraint guarantee? 3) Why is the proof test run as one transaction?
 
 **Proof:** `flyway_schema_history` shows versions 1 to 5, all with success `t`. `\d audit_logs` lists the CHECK constraint `chk_audit_actor` and the triggers `trg_audit_logs_no_update_delete` and `trg_audit_logs_no_truncate`. The test (an insert followed by an update in one transaction) failed with `ERROR: audit_logs is append-only: UPDATE is not allowed`, and `select count(*) from audit_logs` returned 0, so the test insert was rolled back.
+
+### Day 9 (2026-11-23): Runtime JDK aligned to Java 21
+
+**30-second explanation:** "My build targeted Java 21, an LTS release, but my machine's default JDK was 27, so the application was actually running on a different Java version than the one I target. I found it in the startup log, installed 21 was already available, and pointed both the IDE project and the run configuration at it. I then verified the new startup line and re-checked that all five database migrations still validate."
+
+**What I did:**
+
+- Read the Java version from the startup log instead of assuming it from the build file.
+- Set the project SDK and the Run configuration JDK to Java 21.
+- Restarted the application and confirmed the version and the schema state.
+
+**Why (decision):**
+
+- Run on the LTS version that I target and plan to deploy, so behaviour in development matches production.
+- Avoid warnings and library incompatibilities that appear on non-LTS, very new JDKs.
+
+**Problems encountered:** TS-011, resolved.
+
+**Sample interview question:** Q: The code compiles for Java 21, so why does the runtime Java version matter? A: Compiling for a target version only fixes the bytecode level. The JVM that runs it can be newer, and differences in the JVM, libraries and agents can change behaviour or produce warnings. I want development and production to use the same LTS JVM, and I verify it in the startup log.
+
+**Self-check:** 1) Where is the JDK chosen in an IntelliJ plus Maven setup? 2) How do you check which Java actually runs your application?
+
+**Proof:** Startup log: `Starting BackendApplication using Java 21.0.13.0.2`; `Successfully validated 5 migrations`; `Current version of schema "public": 5`; `Started BackendApplication in 2.986 seconds`.

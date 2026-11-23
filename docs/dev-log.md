@@ -153,3 +153,20 @@ Every entry starts with its date (`## YYYY-MM-DD: title`), the day the work actu
 **Next**
 - Switch the runtime JDK to 21 (TS-011).
 - Create the JPA entities and repositories, starting with `cities` and `users`.
+
+## 2026-11-23: Runtime JDK switched to Java 21
+
+**Done**
+- Switched the runtime JDK from 27 to Java 21 (Microsoft OpenJDK 21.0.13): set the project SDK in IntelliJ's Project Structure and the JDK in the `BackendApplication` Run configuration.
+- Verified from the startup log: `Starting BackendApplication using Java 21.0.13.0.2`.
+- Re-verified the database on the new JDK: `Successfully validated 5 migrations`, `Current version of schema "public": 5`, `No migration necessary`. The application started in about 3 seconds.
+
+**Blocked**
+- None. TS-011 is resolved.
+
+**Learned**
+- The JDK is chosen in three separate places: the project SDK, the Run configuration, and the terminal default (`JAVA_HOME`). The first two changed what IntelliJ runs; the terminal default is separate.
+- A target of `release 21` in the build does not decide which JDK actually runs the application. The runtime JDK must be checked in the startup log.
+
+**Next**
+- Start the first Java code: the `City` entity and repository, verified by a test against the real database.
