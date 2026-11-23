@@ -134,3 +134,22 @@ Every entry starts with its date (`## YYYY-MM-DD: title`), the day the work actu
 - Apply and verify V5, including the append-only test.
 - Create the JPA entities for the verified tables.
 - Switch the runtime JDK to 21 (TS-011).
+
+## 2026-11-22 (update 2): Flyway V5 applied, database schema complete
+
+**Done**
+- Flyway V5 (`audit_logs`) applied and verified: versions 1 to 5, all `success = t`.
+- `\d audit_logs` shows the actor CHECK constraint and the triggers that reject UPDATE, DELETE and TRUNCATE.
+- Append-only test passed: an update failed with `audit_logs is append-only: UPDATE is not allowed`, and the test insert was rolled back (`count(*)` returned 0).
+- The MVP database schema is complete: `cities`, `users`, `vehicle_types`, `vendors`, `vehicles`, `leads`, `lead_allocations`, `bookings`, `payments`, `audit_logs`, plus Flyway's history table.
+
+**Blocked**
+- None.
+
+**Learned**
+- `psql -c` runs a multi-statement string as one transaction, so a failing statement rolls back the earlier ones. This allows testing constraints without leaving data behind.
+- An immutable table cannot be cleaned up afterwards, so tests against it must be rolled back.
+
+**Next**
+- Switch the runtime JDK to 21 (TS-011).
+- Create the JPA entities and repositories, starting with `cities` and `users`.

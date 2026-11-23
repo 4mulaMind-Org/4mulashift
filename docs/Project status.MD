@@ -1,5 +1,7 @@
 # Project Status: 4mulaShift
 
+> Baseline as of 2026-11-15. See "Status updates" at the bottom for later changes; the newest update wins.
+
 **Last updated:** 2026-11-15
 **Phase:** Phase 1 (MVP), Sprint 1 in progress
 **Current step:** Sprint 1, Day 5 (V2 migration to verify)
@@ -80,3 +82,60 @@ Every step produces: the work, a dev-log entry, an interview note, and a trouble
 ## How to resume in a new chat
 
 Paste this file and say which step you are on. The assistant has no memory between chats.
+
+---
+
+## Status updates
+
+Baseline above is as of 2026-11-15. Each update below lists only what changed. Where an update differs from the baseline, the newest update wins.
+
+### 2026-11-22
+
+**Progress**
+- Sprint 1 Day 5 (Flyway V2): verified, schema version 2.
+- Sprint 1 Day 6 (Flyway V3: `leads`, `lead_allocations`): done and verified (schema version 3).
+- Sprint 1 Day 7 (Flyway V4: `bookings`, `payments`): file ready, not yet applied.
+- ER diagram revision added to `er-diagram.md`.
+
+**Decisions**
+- At most one active booking per lead and one active booking per vehicle and day (partial unique indexes over `PENDING_PAYMENT` and `CONFIRMED`).
+- A booking's vehicle must belong to the booking's vendor (composite foreign key).
+- Idempotency keys are scoped to the caller (per customer on leads, per vendor on bookings, per booking on payments).
+- "First accept wins" is enforced by a partial unique index on ACCEPTED allocations per lead.
+
+**Open items**
+- Closed: TS-010 (the `.env` path fix applied and verified), TS-005 (booking index design), the `er-diagram.md` update.
+- Opened and closed since the baseline: TS-013, TS-014 (see `troubleshooting-log.md`).
+- Still open: TS-011 (switch the runtime JDK to 21), placeholder `max_kg` values, PRD section 11 questions and launch city, GitHub Projects board, design-phase dates in the dev log.
+
+**Next**
+- Apply and verify V4, write V5 (`audit_logs`), then the JPA entities.
+
+### 2026-11-22 (update)
+
+**Progress**
+- Flyway V4 (`bookings`, `payments`): done and verified (schema version 4).
+- Flyway V5 (`audit_logs`): file ready, not yet applied.
+
+**Decisions**
+- The audit log is append-only, enforced by database triggers on UPDATE, DELETE and TRUNCATE; it has no foreign keys.
+
+**Open items**
+- No change.
+
+**Next**
+- Apply and verify V5, then create the JPA entities.
+
+### 2026-11-22 (update 2)
+
+**Progress**
+- Flyway V5 (`audit_logs`): done and verified (schema version 5). The MVP database schema is complete.
+
+**Decisions**
+- No new decisions.
+
+**Open items**
+- No change.
+
+**Next**
+- Switch the runtime JDK to 21 (TS-011), then create the JPA entities and repositories, starting with `cities` and `users`.

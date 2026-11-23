@@ -43,7 +43,8 @@ Status: **Fixed**, **Open**, or **Ignored (harmless)**.
 - **Lesson:** Staged and unstaged states are separate. Run `git status` before committing.
 
 ## TS-005: Design gap, double-booking index did not cover pending bookings
-- **Date:** during API design | **Status:** Fixed in design (apply to `er-diagram.md` and migrations)
+- **Date:** during API design | **Status:** Fixed and verified (2026-11-22)
+- **Verified:** Flyway V4 applied; `\d bookings` shows `uq_bookings_active_vehicle_slot`, a partial unique index on `(vehicle_id, slot_date)` over `PENDING_PAYMENT` and `CONFIRMED`. The ER diagram revision records the change.
 - **Symptom:** Found while writing the API spec. Accepting an offer creates a `PENDING_PAYMENT` booking first, but the partial unique index covered only `CONFIRMED`.
 - **Cause:** Two customers could both reach payment for the same vehicle and day because a pending booking did not hold the slot.
 - **Fix:** The partial unique index on `(vehicle_id, slot_date)` must apply to status `PENDING_PAYMENT` and `CONFIRMED`. Unpaid bookings expire after a payment window (15 minutes, assumption) and become `CANCELLED`, which releases the slot.
@@ -102,7 +103,8 @@ Status: **Fixed**, **Open**, or **Ignored (harmless)**.
 - **Lesson:** Not every warning needs action, but check each one once and write down why it is safe.
 
 ## TS-013: Connection to localhost:5432 refused (Postgres container not running)
-- **Date:** 2026-11-21 | **Status:** Fix identified (confirm after restarting the containers)
+- **Date:** 2026-11-21 | **Status:** Fixed and verified (2026-11-22)
+- **Verified:** Docker containers restarted; the application started, connected to Postgres and Flyway applied V3 (`flyway_schema_history` shows versions 1 to 3, all `success = t`).
 - **Symptom:** `Unable to obtain connection from database: Connection to localhost:5432 refused ... postmaster is accepting TCP/IP connections` (SQL State 08001, `java.net.ConnectException: Connection refused`).
 - **Cause:** Docker Desktop was not running, so the Postgres container was down. The compose file has no `restart` policy, so containers do not start by themselves when Docker Desktop opens.
 - **How I told it apart from TS-010:** The user name in the error was no longer the literal `${POSTGRES_USER}`, so `.env` was loaded correctly. "Connection refused" means the server could not be reached; "password authentication failed" would mean the server was reached but rejected the login.
@@ -119,6 +121,3 @@ Status: **Fixed**, **Open**, or **Ignored (harmless)**.
 - **Cause:** The command was run outside the repo. Compose looks for `docker-compose.yml` in the current directory only.
 - **Fix:** `cd ~/Desktop/workSpace/project/4mulashift`, then run `docker compose ps` or `docker compose up -d`. Alternative from anywhere: `docker compose -f ~/Desktop/workSpace/project/4mulashift/docker-compose.yml ps`.
 - **Lesson:** The same error message can have different causes (TS-007 was a trailing space in the file name, TS-014 is the wrong directory). Check `pwd` first, then `ls -la`. The IDE terminal opens in the project folder, so it avoids this.
-
-- **Date:** 2026-11-21 | **Status:** Fixed and verified (2026-11-22)
-- **Verified:** Docker containers restarted; the application started, connected to Postgres and Flyway applied V3 (`flyway_schema_history` shows versions 1 to 3, all `success = t`).
