@@ -223,3 +223,15 @@ Decision for the MVP: the system picks the first free vehicle of the required ty
 - Whether vendors can see the customer name before confirmation (currently hidden together with the phone number).
 - Rate limits per endpoint.
 - Versioning policy when `/api/v2` is needed.
+
+## Revision 2026-11-24
+
+New endpoints, implemented in the `city` module and verified with `curl`:
+
+| Method | Path | Role | Purpose | Result |
+|---|---|---|---|---|
+| GET | `/cities` | public | List active cities | `200` |
+| GET | `/cities/{id}` | public | One city | `200`, or `404 NOT_FOUND` |
+| POST | `/admin/cities` | ADMIN (open until authentication exists) | Create a city | `201` with `Location`, or `409 CITY_ALREADY_EXISTS`, or `400 VALIDATION_ERROR` |
+
+New error codes: `CITY_ALREADY_EXISTS` (409) and `MALFORMED_REQUEST` (400). For `VALIDATION_ERROR`, the `details` list holds one message per field, for example `name: must not be blank`.

@@ -200,3 +200,8 @@ flowchart LR
 - Offer expiry: scheduled job or delayed check? (A scheduled job is the simpler MVP choice.)
 - Where should the accept-window logic live if we add one?
 - How is a vehicle chosen for a vendor at confirmation time: vendor selects, or the system picks the first free vehicle of the required type?
+
+## Revision 2026-11-24
+
+- A `city` module was added. It owns the `cities` table and exposes `CityService` to other modules (vendor and lead).
+- Every module uses the same layout: controller, service (interface and implementation), repository, entity, dto, mapper, exception. Shared code lives in `common` (error handling).

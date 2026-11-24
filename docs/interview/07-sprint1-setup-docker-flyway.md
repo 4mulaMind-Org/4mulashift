@@ -261,3 +261,30 @@ Entry template:
 **Self-check:** 1) Where is the JDK chosen in an IntelliJ plus Maven setup? 2) How do you check which Java actually runs your application?
 
 **Proof:** Startup log: `Starting BackendApplication using Java 21.0.13.0.2`; `Successfully validated 5 migrations`; `Current version of schema "public": 5`; `Started BackendApplication in 2.986 seconds`.
+
+### Day 10 (2026-11-24): First module, the city module (controller, service, repository)
+
+**30-second explanation:** "I built my first module in the layered structure I designed. A controller handles HTTP only, a service interface with an implementation holds the business rules and transactions, a repository talks to the database, and entities never leave the service because the API uses DTOs. A shared exception handler turns every business error into one consistent response format. I tested the service with a fast unit test, the repository against the real database, and the whole chain with real HTTP calls."
+
+**What I did:**
+
+- Created the module with controller, service, repository, entity, dto, mapper and exception packages.
+- Added a shared `GlobalExceptionHandler` that returns the common error format with a code.
+- Wrote a Mockito unit test for the service and a rolled-back integration test for the repository.
+- Verified the endpoints with `curl`: create, list, duplicate, validation error and not found.
+
+**Why (decision):**
+
+- Service as an interface plus an implementation, so other modules depend on the contract and the implementation can change or be mocked.
+- Entities never returned from controllers. DTOs as records keep the API stable when the table changes.
+- The duplicate check happens twice: an early check gives a friendly error, and the database unique constraint is the real guarantee, because two requests can pass the early check together.
+- A global exception handler keeps controllers free of error handling and guarantees one error format.
+- The admin endpoint is open for now and gets the ADMIN role when authentication is built.
+
+**Problems encountered:** none.
+
+**Sample interview question:** Q: Why check for duplicates in code if the database already has a unique constraint? A: The check gives a clear, friendly error in the normal case. But it is a check-then-act, so two concurrent requests can both pass it. The unique constraint is what actually guarantees correctness, and the service converts the resulting database error into the same business error. The same idea applies to the booking flow.
+
+**Self-check:** 1) Why does the controller return DTOs and never entities? 2) What does the service layer own that the controller must not? 3) Why is an early existence check not enough on its own?
+
+**Proof:** The build succeeded. `curl` results: `POST /api/v1/admin/cities` returned `201` with `Location: /api/v1/cities/6`; `GET /api/v1/cities` returned `200` with the city; a repeated create returned `409` with code `CITY_ALREADY_EXISTS`; an empty name returned `400` with code `VALIDATION_ERROR` and detail `name: must not be blank`; `GET /api/v1/cities/9999` returned `404` with code `NOT_FOUND`.

@@ -170,3 +170,25 @@ Every entry starts with its date (`## YYYY-MM-DD: title`), the day the work actu
 
 **Next**
 - Start the first Java code: the `City` entity and repository, verified by a test against the real database.
+
+## 2026-11-24: First module built, the city module
+
+**Done**
+- Built the `city` module in the layered structure from the HLD: controller, service (interface and implementation), repository, entity, DTOs (records), mapper and module exceptions.
+- Added shared error handling in `common/exception`: an `ApiException` base class, the `ApiError` response record and a `GlobalExceptionHandler`, so every error uses the format from the API spec.
+- Added three endpoints: `GET /api/v1/cities`, `GET /api/v1/cities/{id}`, `POST /api/v1/admin/cities`.
+- Wrote a unit test for the service (Mockito, no database) and an integration test for the repository (real PostgreSQL, each test rolled back). The build succeeded.
+- Verified through HTTP with `curl`: `201` with a `Location` header, `200` list, `409 CITY_ALREADY_EXISTS`, `400 VALIDATION_ERROR` (`name: must not be blank`) and `404 NOT_FOUND`.
+- Starting the application with the new entity also made Hibernate validate `City` against the `cities` table (`ddl-auto=validate`).
+
+**Blocked**
+- None.
+
+**Learned**
+- A rolled-back insert still consumes an identity value, so the first real row got id 6 after the repository tests had used ids 1 to 5.
+- The early "already exists" check is only a friendly message. The unique constraint in the database is the real guarantee, so the service also converts a unique-violation into the same duplicate error.
+- A catch-all exception handler can turn Spring's own 404 and 405 responses into 500 errors, so it was left out for now.
+
+**Next**
+- Day 11: the vehicle type reference data and the rule-based vehicle matching service (volume and weight to MINI, TEMPO or TRUCK), with unit tests.
+- Add controller tests with MockMvc once the Spring Boot 4 test package names are confirmed.

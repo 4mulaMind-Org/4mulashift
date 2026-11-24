@@ -139,3 +139,21 @@ Baseline above is as of 2026-11-15. Each update below lists only what changed. W
 
 **Next**
 - Switch the runtime JDK to 21 (TS-011), then create the JPA entities and repositories, starting with `cities` and `users`.
+
+### 2026-11-24
+
+**Progress**
+- First module built and verified: `city` (controller, service, repository, entity, DTOs, mapper, exceptions), with a Mockito unit test and a rolled-back repository integration test. Verified through the HTTP API.
+- Shared error handling in place (`common/exception`).
+- `city` data now exists in the database: Mathura, Uttar Pradesh (id 6).
+
+**Decisions**
+- Every module follows the layout: controller, service (interface and implementation), repository, entity, dto, mapper, exception.
+- Duplicate protection uses an early check plus the database unique constraint as the real guarantee.
+- Admin endpoints are open until authentication is added. No catch-all exception handler yet, to avoid turning Spring's own 404 and 405 into 500.
+
+**Open items**
+- Still open: placeholder `max_kg` values, PRD section 11 questions and launch city, GitHub Projects board, design-phase dates in the dev log, controller tests with MockMvc (confirm Boot 4 test package names).
+
+**Next**
+- Day 11: vehicle type reference data and the rule-based vehicle matching service, with unit tests.
