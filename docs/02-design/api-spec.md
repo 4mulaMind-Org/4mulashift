@@ -235,3 +235,14 @@ New endpoints, implemented in the `city` module and verified with `curl`:
 | POST | `/admin/cities` | ADMIN (open until authentication exists) | Create a city | `201` with `Location`, or `409 CITY_ALREADY_EXISTS`, or `400 VALIDATION_ERROR` |
 
 New error codes: `CITY_ALREADY_EXISTS` (409) and `MALFORMED_REQUEST` (400). For `VALIDATION_ERROR`, the `details` list holds one message per field, for example `name: must not be blank`.
+
+## Revision 2026-11-25
+
+New endpoints, implemented in the `vehicle` module and verified with `curl`:
+
+| Method | Path | Role | Purpose | Result |
+|---|---|---|---|---|
+| GET | `/vehicle-types` | public | All vehicle types, smallest first | `200` |
+| POST | `/vehicle-matches` | public | Body `{"volumeCft", "weightKg"}`; returns the smallest vehicle type that fits | `200`, or `422 LOAD_EXCEEDS_CAPACITY`, or `400 VALIDATION_ERROR` |
+
+New error code: `LOAD_EXCEEDS_CAPACITY` (422).

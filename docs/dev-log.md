@@ -192,3 +192,34 @@ Every entry starts with its date (`## YYYY-MM-DD: title`), the day the work actu
 **Next**
 - Day 11: the vehicle type reference data and the rule-based vehicle matching service (volume and weight to MINI, TEMPO or TRUCK), with unit tests.
 - Add controller tests with MockMvc once the Spring Boot 4 test package names are confirmed.
+
+## 2026-11-24 to 2026-11-25: Vehicle module, rule-based matching, and project recovery
+
+**Done**
+- Built the `vehicle` module in the same layered structure as `city`: entity, repository, DTOs, mapper, two services (type listing and matching), controller and a module exception.
+- Implemented the matching rule (feature F2): the smallest vehicle type that can carry the load, where both volume and weight must fit. Types are sorted in memory, so the result does not depend on database row order. When nothing fits, the shared error handler returns `422 LOAD_EXCEEDS_CAPACITY`.
+- Added two endpoints: `GET /api/v1/vehicle-types` and `POST /api/v1/vehicle-matches`.
+- Wrote 11 unit tests (boundaries included), a database test for the seeded types and two integration tests.
+- Fixed the city repository test so it uses random names and cannot collide with real data.
+- Verified through HTTP: list in order MINI, TEMPO, TRUCK; 180 cft and 900 kg gives TEMPO; 40 cft and 600 kg gives TEMPO (weight forces the upgrade); 900 cft and 1000 kg gives `422`; 0 cft gives `400 VALIDATION_ERROR`.
+- Clean build and all tests: `Tests run: 24, Failures: 0, Errors: 0`, `BUILD SUCCESS`, on Java 21.
+- Added `verify-structure.sh`, a read-only script that checks the files, folders, package names and git state of the modules. All checks pass.
+- Restored `docker-compose.yml` and committed it for the first time.
+
+**Blocked**
+- Code unzipped into a nested folder (TS-015).
+- `git clean -fd` deleted the untracked `docker-compose.yml` (TS-016).
+- A test collided with real data in the development database (TS-017).
+- A fix seemed to have no effect because it was not recompiled (TS-018).
+- The verification script gave a false failure on macOS (TS-019).
+
+**Learned**
+- Check `pwd` before extracting an archive, and verify the result with a file count.
+- Commit infrastructure files early, and run `git clean -nd` (dry run) before `git clean -fd`.
+- Tests must not depend on real data. Use generated unique values.
+- When a fix does nothing, check whether it was compiled ("Nothing to compile" is a clue). Use `clean` after replacing files outside the IDE.
+- A failing check can be wrong rather than the code. Verify the check, and write portable shell scripts.
+
+**Next**
+- Day 12: the `user` module (registration with a hashed password and a unique email), the base for vendors and leads.
+- Then the `vendor` module and the allocation scoring engine.

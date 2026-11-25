@@ -157,3 +157,21 @@ Baseline above is as of 2026-11-15. Each update below lists only what changed. W
 
 **Next**
 - Day 11: vehicle type reference data and the rule-based vehicle matching service, with unit tests.
+
+### 2026-11-25
+
+**Progress**
+- Vehicle module built and verified: matching rule, `GET /api/v1/vehicle-types` and `POST /api/v1/vehicle-matches`, with unit, database and HTTP proof. 24 tests pass on Java 21.
+- Project structure verified with `verify-structure.sh` (31 Java files, packages and git state correct). `docker-compose.yml` is now tracked by git.
+
+**Decisions**
+- The `vehicle` module owns `vehicle_types` and `vehicles`; the `vendor` module owns vendors only.
+- Over-capacity loads return `422 LOAD_EXCEEDS_CAPACITY`.
+- Before large file operations: check `pwd`, commit, and use `git clean -nd` before `git clean -fd`.
+
+**Open items**
+- Still open: placeholder `max_kg` values, PRD section 11 questions and launch city, GitHub Projects board, design-phase dates in the dev log, controller tests with MockMvc (confirm Boot 4 test package names), a separate test database (Testcontainers).
+
+**Next**
+- Day 12: `user` module (registration, hashed password, unique email).
+- Then the `vendor` module and the allocation scoring engine.

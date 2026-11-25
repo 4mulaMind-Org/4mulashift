@@ -129,3 +129,44 @@ Status: **Fixed**, **Open**, or **Ignored (harmless)**.
 - **Verified:** Startup log shows `Starting BackendApplication using Java 21.0.13.0.2` and `OpenJDK 64-Bit Server VM 21.0.13.0.2`.
 - **Remaining note:** The terminal default JDK on this machine is still 27, so Maven commands run from the terminal use it unless `JAVA_HOME` is set. The build targets release 21, so this does not break anything. To align it: `export JAVA_HOME=$(/usr/libexec/java_home -v 21)` (add it to `~/.zshrc` to make it permanent).
 - **Lesson:** Check the JDK at the place where the application actually runs, not only in the build file. Three settings control it: project SDK, Run configuration, terminal.
+
+## TS-015: Code extracted into a nested folder
+- **Date:** 2026-11-24 | **Status:** Fixed
+- **Symptom:** The project tree showed `services/backend/services/backend/src/...`, and the real source folder lacked the new modules.
+- **Cause:** The archives store full paths starting with `services/backend/src/`. They were extracted while the terminal was already inside `services/backend`, so the path was added twice.
+- **Fix:** Made a backup copy of `src`, removed the nested `services` folder, cleared the half-moved module folders (keeping `BackendApplication.java` and `BackendApplicationTests.java`), and extracted the archives again from the repo root. Verified with a file count (31) and the module listing.
+- **Lesson:** Run `pwd` before extracting any archive, extract from the repo root, and verify with a count. Back up and commit before large file operations.
+
+## TS-016: `git clean -fd` deleted an untracked file
+- **Date:** 2026-11-24 | **Status:** Fixed
+- **Symptom:** The output of `git clean -fd` included `Removing docker-compose.yml`.
+- **Cause:** `docker-compose.yml` had never been committed, and `git clean -fd` deletes every file Git does not track. `git reset --hard` also discards uncommitted edits to tracked files. `.env` survived because it is ignored, and `-fd` does not remove ignored files.
+- **Fix:** Restored the file from the delivered copy, committed it, and confirmed with `git ls-files` that it is tracked.
+- **Lesson:** Commit infrastructure files early. Run `git clean -nd` (dry run) and read the list before `git clean -fd`. Check essential files with `git ls-files`.
+
+## TS-017: A test collided with real data
+- **Date:** 2026-11-24 | **Status:** Fixed
+- **Symptom:** `CityRepositoryTest` failed with `duplicate key value violates unique constraint "uq_cities_name_state"` for `Mathura, Uttar Pradesh`.
+- **Cause:** The test inserted a real-looking city that already existed in the development database after a manual API check. The constraint worked correctly.
+- **Fix:** The tests now use random names (`City-` plus 8 random characters), and each test is still rolled back.
+- **Lesson:** Tests must not depend on, or collide with, real data. Use generated unique values. An isolated test database (Testcontainers) is the longer-term fix.
+
+## TS-018: A fix had no effect because it was not recompiled
+- **Date:** 2026-11-24 | **Status:** Fixed (exact cause not confirmed)
+- **Symptom:** After applying the corrected test, the same failure repeated, and the build log said `Nothing to compile - all classes are up to date`.
+- **Cause:** The corrected file had not reached the compiler: either the extraction step had been skipped, or the replaced file kept an older timestamp than the compiled class, so Maven did not recompile it.
+- **Fix:** Checked the file content with `grep -c Mathura`, then ran `./mvnw clean test`. It recompiled 25 main and 6 test files, and all tests passed.
+- **Lesson:** When a fix seems to do nothing, check whether it was compiled. Use `clean` after replacing files outside the IDE.
+
+## TS-019: Verification script gave a false failure on macOS
+- **Date:** 2026-11-25 | **Status:** Fixed
+- **Symptom:** `verify-structure.sh` reported a package mismatch for all 31 files, although every file declared the correct package.
+- **Cause:** The script used the `sed` pattern `\(main\|test\)`. The `\|` alternation is a GNU extension that the BSD `sed` on macOS ignores, so the path was never shortened. The project was fine; the check was wrong.
+- **Fix:** Replaced it with two plain `-e` expressions, tested the script on a healthy and a deliberately broken layout, and ran it again on the real project: all checks passed.
+- **Lesson:** A failing check can be wrong rather than the code. Verify the check first. Write portable shell and test it on the target operating system.
+
+## TS-020: Messages that were checked and ignored
+- **Date:** 2026-11-25 | **Status:** Ignored (harmless)
+- Mockito "self-attaching" and "dynamic agent loading" warnings: a notice that a future JDK will require Mockito to be added as an agent. Tests pass. To be handled when the JDK is upgraded.
+- Spring Data Redis "Could not safely identify store assignment for repository candidate" (INFO): with the JPA and Redis starters both present, Spring Data checks each repository. The log shows `Found 2 JPA repository interfaces`, so both repositories are correctly assigned to JPA. It can be silenced with `spring.data.redis.repositories.enabled=false` if wanted.
+- `FATAL: role "postgres" does not exist` in the Postgres log: a client connected with the default user name `postgres`. The database user is `mulashift`, so nothing needs fixing.

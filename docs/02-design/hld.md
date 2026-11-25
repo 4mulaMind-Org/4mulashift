@@ -205,3 +205,8 @@ flowchart LR
 
 - A `city` module was added. It owns the `cities` table and exposes `CityService` to other modules (vendor and lead).
 - Every module uses the same layout: controller, service (interface and implementation), repository, entity, dto, mapper, exception. Shared code lives in `common` (error handling).
+
+## Revision 2026-11-25
+
+- A `vehicle` module was added. It owns `vehicle_types` and `vehicles` and exposes `VehicleMatchingService` to the lead module. The `vendor` module owns vendors only.
+- Matching is rule-based: the smallest vehicle type where both volume and weight fit. Loads that fit no single vehicle return a business error (HTTP 422).

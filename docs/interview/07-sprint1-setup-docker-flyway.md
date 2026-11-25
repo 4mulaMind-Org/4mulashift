@@ -288,3 +288,33 @@ Entry template:
 **Self-check:** 1) Why does the controller return DTOs and never entities? 2) What does the service layer own that the controller must not? 3) Why is an early existence check not enough on its own?
 
 **Proof:** The build succeeded. `curl` results: `POST /api/v1/admin/cities` returned `201` with `Location: /api/v1/cities/6`; `GET /api/v1/cities` returned `200` with the city; a repeated create returned `409` with code `CITY_ALREADY_EXISTS`; an empty name returned `400` with code `VALIDATION_ERROR` and detail `name: must not be blank`; `GET /api/v1/cities/9999` returned `404` with code `NOT_FOUND`.
+
+### Day 11 (2026-11-24 to 2026-11-25): Vehicle module and rule-based matching
+
+**30-second explanation:** "I built the vehicle module, which owns the vehicle types and the rule that picks the smallest vehicle that can carry a load. The service sorts the types from smallest to largest in memory and returns the first one where both volume and weight fit; otherwise it raises a business error that the shared handler returns as HTTP 422. The rule itself lives in the entity, the service orchestrates, and the controller only handles HTTP. I proved it with unit tests on the boundaries, tests against the real database and real HTTP calls."
+
+**What I did:**
+
+- Created the module with entity, repository, DTOs, mapper, two services, controller and an exception.
+- Implemented the matching rule and the `422 LOAD_EXCEEDS_CAPACITY` response.
+- Wrote 11 unit tests (boundaries, weight-driven upgrade, over-capacity, empty configuration, invalid input), a database test and two integration tests.
+- Verified the endpoints with `curl`, and wrote a read-only script that checks the project structure.
+
+**Why (decision):**
+
+- The rule checks both volume and weight, because a load can fit by volume and still be too heavy.
+- Types are sorted in memory, so the result never depends on database row order.
+- The rule lives in the entity (`canCarry`), which keeps the business rule next to its data and easy to unit test.
+- `422` rather than `400`: the request is valid, but the business rule cannot be satisfied. A `400` is for invalid input.
+- The lead module will call the matching service through its interface only, never through this module's repository.
+- Matching is a `POST` with a body, since it is a calculation on input rather than a lookup of a stored resource.
+
+**Problems encountered:** TS-015 to TS-019. The best interview stories: code extracted into a nested folder, and how I verified and rebuilt the project from known-good archives; `git clean` deleting an untracked file; a test colliding with real data; and a verification script that was wrong, not the project.
+
+**Sample interview question:** Q: Why does the matching rule check both volume and weight? A: A load can fit by volume and still exceed the weight limit. For example, 40 cubic feet fits a MINI (limit 50), but at 600 kg it is above the MINI limit of 500 kg, so the correct answer is a TEMPO. Checking only volume would overload the smaller vehicle.
+
+**Sample interview question:** Q: Tell me about a time something went wrong in your project and how you fixed it. A: After a bad extraction, my source tree had a duplicate nested folder and moved files. I did not fix files one by one. I made a backup, rebuilt from the known-good archives, and verified with a file count and a script that checks every file, folder and package name. The script then showed a false failure on macOS because of a `sed` difference. I confirmed the project was fine, fixed the script, and recorded each incident with its lesson.
+
+**Self-check:** 1) Why are the vehicle types sorted in memory rather than relying on database order? 2) Why is the over-capacity response 422 and not 400? 3) What caused TS-016, and what two habits prevent it?
+
+**Proof:** `./mvnw clean test`: `Tests run: 24, Failures: 0, Errors: 0, Skipped: 0`, `BUILD SUCCESS`, Java 21.0.13. `curl`: `GET /api/v1/vehicle-types` returned MINI, TEMPO, TRUCK in order; `POST /api/v1/vehicle-matches` with 180 cft and 900 kg returned TEMPO; with 40 cft and 600 kg returned TEMPO; with 900 cft and 1000 kg returned `422` with code `LOAD_EXCEEDS_CAPACITY`; with 0 cft returned `400` with code `VALIDATION_ERROR` and the detail `volumeCft: must be greater than 0`. `verify-structure.sh` ended with `RESULT: all checks passed.`
